@@ -17,8 +17,9 @@
 ## Запуск
 
 ```bash
-cp .env.example .env   # указать ID папок Google Drive через запятую
+cp .env.example .env   # ID папок Google Drive через запятую и OAuth-клиент (Desktop app)
 set -a; source .env; set +a
+sbt "run auth"         # один раз: вход в Google, refresh token сохраняется в БД
 sbt run
 ```
 

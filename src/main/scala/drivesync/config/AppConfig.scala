@@ -7,7 +7,12 @@ import zio.config.*
 import zio.config.magnolia.*
 import zio.config.typesafe.*
 
-final case class DriveConfig(folderIds: List[String])
+final case class DriveConfig(
+  folderIds: List[String],
+  clientId: String,
+  clientSecret: String,
+  authRedirectPort: Int
+)
 
 final case class SyncConfig(interval: Duration)
 
