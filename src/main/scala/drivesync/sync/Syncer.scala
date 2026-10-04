@@ -29,11 +29,12 @@ final class Syncer(
       local <- repository.findAll
       plan = SyncPlan.make(selected, local)
       _ <- ZIO.logInfo(s"Remote files: ${selected.size}, to download: ${plan.size}")
-      _ <- ZIO.foreachDiscard(plan.zipWithIndex) { case (action, index) =>
-        execute(action, s"${index + 1}/${plan.size}").catchAll(error =>
-          ZIO.logErrorCause(s"Failed: $action", Cause.fail(error))
-        )
-      }
+      _ <- ZIO
+        .foreachParDiscard(plan.zipWithIndex) { case (action, index) =>
+          execute(action, s"${index + 1}/${plan.size}")
+            .catchAll(error => ZIO.logErrorCause(s"Failed: $action", Cause.fail(error)))
+        }
+        .withParallelism(config.sync.parallelDownloads.max(1))
     } yield ()
 
   private def execute(action: SyncAction, progress: String): Task[Unit] = {
