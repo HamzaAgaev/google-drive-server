@@ -7,6 +7,7 @@ import drivesync.config.AppConfig
 import drivesync.db.{CredentialsRepository, Database, FileRepository}
 import drivesync.google.{AccessTokens, AuthCommand, DriveClient, GoogleOAuth}
 import drivesync.sync.{Downloader, Syncer}
+import drivesync.web.WebServer
 
 object Main extends ZIOAppDefault {
 
@@ -14,8 +15,7 @@ object Main extends ZIOAppDefault {
     getArgs.flatMap { args =>
       args.toList match {
         case Nil =>
-          ZIO
-            .serviceWithZIO[Syncer](_.runForever)
+          (ZIO.serviceWithZIO[Syncer](_.runForever) <&> WebServer.run)
             .provide(
               AppConfig.layer,
               Database.layer,

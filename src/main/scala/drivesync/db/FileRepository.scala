@@ -26,6 +26,12 @@ final class FileRepository(xa: Transactor[Task]) {
       .to[List]
       .transact(xa)
 
+  def find(driveId: String): Task[Option[DownloadedFile]] =
+    sql"SELECT drive_id, path, md5, created_time FROM files WHERE drive_id = $driveId"
+      .query[DownloadedFile]
+      .option
+      .transact(xa)
+
   def upsert(file: DownloadedFile): Task[Unit] =
     sql"""
       INSERT INTO files (drive_id, path, md5, created_time)
