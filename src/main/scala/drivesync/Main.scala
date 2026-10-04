@@ -3,15 +3,16 @@ package drivesync
 import zio.*
 
 import drivesync.config.AppConfig
+import drivesync.db.{Database, FileRepository}
 
 object Main extends ZIOAppDefault {
 
-  private val program: ZIO[AppConfig, Nothing, Unit] =
+  private val program: ZIO[FileRepository, Throwable, Unit] =
     for {
-      config <- ZIO.service[AppConfig]
-      _ <- ZIO.logInfo(s"Configuration loaded: $config")
+      files <- ZIO.serviceWithZIO[FileRepository](_.findAll)
+      _ <- ZIO.logInfo(s"Downloaded files in database: ${files.size}")
     } yield ()
 
   override def run: ZIO[Any, Any, Unit] =
-    program.provide(AppConfig.layer)
+    program.provide(AppConfig.layer, Database.layer, FileRepository.layer)
 }

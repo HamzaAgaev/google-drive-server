@@ -1,0 +1,6 @@
+CREATE TABLE files (
+  drive_id TEXT PRIMARY KEY,
+  path TEXT NOT NULL UNIQUE,
+  md5 TEXT NOT NULL,
+  created_time INTEGER NOT NULL
+);
