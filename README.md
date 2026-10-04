@@ -23,4 +23,4 @@ sbt "run auth"         # один раз: вход в Google, refresh token со
 sbt run
 ```
 
-Остальные настройки — в `src/main/resources/application.conf`.
+Остальные настройки — в `src/main/resources/application.conf`. Деплой на сервер — [deploy/README.md](deploy/README.md).
