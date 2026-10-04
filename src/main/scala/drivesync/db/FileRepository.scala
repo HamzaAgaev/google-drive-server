@@ -32,6 +32,17 @@ final class FileRepository(xa: Transactor[Task]) {
       .option
       .transact(xa)
 
+  def findRejected: Task[Set[(String, String)]] =
+    sql"SELECT drive_id, md5 FROM rejected_files"
+      .query[(String, String)]
+      .to[Set]
+      .transact(xa)
+
+  def reject(driveId: String, md5: String): Task[Unit] =
+    sql"INSERT OR IGNORE INTO rejected_files (drive_id, md5) VALUES ($driveId, $md5)".update.run
+      .transact(xa)
+      .unit
+
   def upsert(file: DownloadedFile): Task[Unit] =
     sql"""
       INSERT INTO files (drive_id, path, md5, created_time)

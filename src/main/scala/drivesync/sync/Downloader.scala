@@ -10,6 +10,8 @@ import zio.stream.ZSink
 import drivesync.config.AppConfig
 import drivesync.google.{DriveClient, RemoteFile}
 
+final case class NotAVideoException(name: String) extends Exception(s"Not a video file: $name")
+
 final class Downloader(config: AppConfig, drive: DriveClient) {
 
   def download(file: RemoteFile, relativePath: Path): Task[Unit] = {
@@ -24,6 +26,14 @@ final class Downloader(config: AppConfig, drive: DriveClient) {
       _ <- ZIO.unless(md5 == file.md5) {
         ZIO.attemptBlocking(Files.deleteIfExists(part)) *>
           ZIO.fail(IllegalStateException(s"MD5 mismatch: expected ${file.md5}, got $md5"))
+      }
+      header <- ZIO.attemptBlocking {
+        val input = Files.newInputStream(part)
+        try input.readNBytes(VideoFormat.headerSize)
+        finally input.close()
+      }
+      _ <- ZIO.unless(VideoFormat.isMp4(header)) {
+        ZIO.attemptBlocking(Files.deleteIfExists(part)) *> ZIO.fail(NotAVideoException(file.name))
       }
       _ <- keepOldVersion(target)
       _ <- ZIO.attemptBlocking(Files.move(part, target, StandardCopyOption.ATOMIC_MOVE))

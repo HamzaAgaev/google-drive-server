@@ -27,7 +27,8 @@ final class Syncer(
         config.sync.variantPriority
       )
       local <- repository.findAll
-      plan = SyncPlan.make(selected, local)
+      rejected <- repository.findRejected
+      plan = SyncPlan.make(selected, local, rejected)
       _ <- ZIO.logInfo(s"Remote files: ${selected.size}, to download: ${plan.size}")
       _ <- ZIO
         .foreachParDiscard(plan.zipWithIndex) { case (action, index) =>
@@ -44,8 +45,12 @@ final class Syncer(
     }
     for {
       _ <- ZIO.logInfo(s"[$progress] ${action.productPrefix}: $path")
-      _ <- downloader.download(file, path)
-      _ <- repository.upsert(DownloadedFile(file.id, path, file.md5, file.createdTime))
+      _ <- downloader
+        .download(file, path)
+        .zipRight(repository.upsert(DownloadedFile(file.id, path, file.md5, file.createdTime)))
+        .catchSome { case error: NotAVideoException =>
+          repository.reject(file.id, file.md5) *> ZIO.logWarning(s"${error.getMessage}, skipped")
+        }
     } yield ()
   }
 }

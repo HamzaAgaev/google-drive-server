@@ -12,10 +12,15 @@ enum SyncAction {
 
 object SyncPlan {
 
-  def make(remote: List[RemoteFile], local: List[DownloadedFile]): List[SyncAction] = {
+  def make(
+    remote: List[RemoteFile],
+    local: List[DownloadedFile],
+    rejected: Set[(String, String)]
+  ): List[SyncAction] = {
+    val accepted = remote.filterNot(file => rejected.contains(file.id -> file.md5))
     val localById = local.map(file => file.driveId -> file).toMap
-    val paths = LocalPaths.assign(remote, localById.view.mapValues(_.path).toMap)
-    remote.flatMap { file =>
+    val paths = LocalPaths.assign(accepted, localById.view.mapValues(_.path).toMap)
+    accepted.flatMap { file =>
       localById.get(file.id) match {
         case None => Some(SyncAction.Download(file, paths(file.id)))
         case Some(existing) if existing.md5 != file.md5 =>
