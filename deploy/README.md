@@ -1,7 +1,7 @@
 # Деплой
 
 Ubuntu, nginx, systemd. Код клонируется в `/opt/google-drive-server` и собирается на сервере.
-Приложение слушает `127.0.0.1:8080`, nginx отдаёт его на порту `25565`.
+Приложение слушает `127.0.0.1:8080`, nginx отдаёт его на порту 80 по адресу из `PUBLIC_HOST`.
 
 ## Установка
 
@@ -39,12 +39,13 @@ sudo cp deploy/google-drive-server.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now google-drive-server
 
-sudo cp deploy/nginx.conf /etc/nginx/sites-available/google-drive-server
+set -a; source .env; set +a
+envsubst '$PUBLIC_HOST' < deploy/nginx.conf | sudo tee /etc/nginx/sites-available/google-drive-server > /dev/null
 sudo ln -s /etc/nginx/sites-available/google-drive-server /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-На роутере пробросить TCP-порт `25565` на сервер; если включён ufw: `sudo ufw allow 25565/tcp`.
+На роутере пробросить TCP-порт 80 на сервер; если включён ufw: `sudo ufw allow 80/tcp`.
 
 ## Обновление
 
