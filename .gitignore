@@ -8,3 +8,4 @@ metals.sbt
 data/
 .env
 client_secret*
+app.jar

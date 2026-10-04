@@ -1,48 +1,64 @@
 # Деплой
 
-Ubuntu, nginx, systemd. Приложение слушает `127.0.0.1:8080`, nginx отдаёт его на порту `8081`.
+Ubuntu, nginx, systemd. Код клонируется в `/opt/google-drive-server` и собирается на сервере.
+Приложение слушает `127.0.0.1:8080`, nginx отдаёт его на порту `8081`.
 
 ## Установка
 
-Локально:
+JDK и sbt:
 
 ```bash
-sbt assembly
-scp target/google-drive-server.jar .env data/app.db \
-  deploy/google-drive-server.service deploy/nginx.conf "$DEPLOY_HOST:/tmp/"
+sudo apt install openjdk-21-jdk-headless apt-transport-https curl gnupg
+echo "deb https://repo.scala-sbt.org/scalasbt/debian all main" | sudo tee /etc/apt/sources.list.d/sbt.list
+curl -sL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x2EE0EA64E40A89B84B2DF73499E82A75642AC823" | sudo -H gpg --no-default-keyring --keyring gnupg-ring:/etc/apt/trusted.gpg.d/scalasbt-release.gpg --import
+sudo chmod 644 /etc/apt/trusted.gpg.d/scalasbt-release.gpg
+sudo apt update && sudo apt install sbt
 ```
 
-На сервере:
+Код, секреты и данные:
 
 ```bash
-sudo apt install openjdk-21-jre-headless
 sudo useradd --system --no-create-home --shell /usr/sbin/nologin drive-server
+sudo mkdir /opt/google-drive-server && sudo chown "$USER:" /opt/google-drive-server
+git clone https://github.com/HamzaAgaev/google-drive-server.git /opt/google-drive-server
+cd /opt/google-drive-server
 
-sudo mkdir -p /opt/google-drive-server/data
-sudo mv /tmp/google-drive-server.jar /opt/google-drive-server/app.jar
-sudo mv /tmp/.env /opt/google-drive-server/.env
-sudo mv /tmp/app.db /opt/google-drive-server/data/app.db
-sudo chmod 600 /opt/google-drive-server/.env
-sudo chown -R drive-server:drive-server /opt/google-drive-server/data
+sudo install -m 600 /tmp/.env .env
+sudo mkdir data && sudo install -m 644 /tmp/app.db data/app.db
+sudo chown -R drive-server:drive-server data
+```
 
-sudo mv /tmp/google-drive-server.service /etc/systemd/system/
+`.env` и `data/app.db` (с refresh token) копируются с локальной машины в `/tmp` через `scp`.
+
+Сервисы:
+
+```bash
+sbt -batch "assembly; shutdown" && cp target/google-drive-server.jar app.jar
+
+sudo cp deploy/google-drive-server.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now google-drive-server
 
-sudo mv /tmp/nginx.conf /etc/nginx/sites-available/google-drive-server
+sudo cp deploy/nginx.conf /etc/nginx/sites-available/google-drive-server
 sudo ln -s /etc/nginx/sites-available/google-drive-server /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-Если включён ufw: `sudo ufw allow 8081/tcp`.
+На роутере пробросить TCP-порт `8081` на сервер; если включён ufw: `sudo ufw allow 8081/tcp`.
 
 ## Обновление
+
+На сервере:
+
+```bash
+/opt/google-drive-server/deploy/update.sh
+```
+
+Или с локальной машины (SSH-хост из `DEPLOY_HOST`):
 
 ```bash
 deploy/deploy.sh
 ```
-
-SSH-хост берётся из `DEPLOY_HOST` (переменная окружения или `.env`).
 
 ## Логи
 
