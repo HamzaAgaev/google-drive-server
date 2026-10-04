@@ -7,3 +7,4 @@ target/
 metals.sbt
 data/
 .env
+client_secret*
