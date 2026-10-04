@@ -30,7 +30,7 @@ lazy val root = (project in file("."))
       "dev.zio" %% "zio-test-sbt" % zioVersion % Test
     ),
     run / fork := true,
-    assembly / assemblyJarName := "google-drive-server.jar",
+    assembly / assemblyOutputPath := baseDirectory.value / "target" / "google-drive-server.jar",
     assembly / assemblyMergeStrategy := {
       case path if path.endsWith("module-info.class") => MergeStrategy.discard
       case PathList("META-INF", "versions", _, "OSGI-INF", "MANIFEST.MF") => MergeStrategy.discard

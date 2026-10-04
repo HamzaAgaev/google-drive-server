@@ -8,8 +8,8 @@ Ubuntu, nginx, systemd. Приложение слушает `127.0.0.1:8080`, ng
 
 ```bash
 sbt assembly
-scp target/out/jvm/scala-3.9.0/google-drive-server/google-drive-server.jar .env data/app.db \
-  deploy/google-drive-server.service deploy/nginx.conf server:/tmp/
+scp target/google-drive-server.jar .env data/app.db \
+  deploy/google-drive-server.service deploy/nginx.conf "$DEPLOY_HOST:/tmp/"
 ```
 
 На сервере:
@@ -39,10 +39,10 @@ sudo nginx -t && sudo systemctl reload nginx
 ## Обновление
 
 ```bash
-sbt assembly
-scp target/out/jvm/scala-3.9.0/google-drive-server/google-drive-server.jar server:/tmp/
-ssh server 'sudo mv /tmp/google-drive-server.jar /opt/google-drive-server/app.jar && sudo systemctl restart google-drive-server'
+deploy/deploy.sh
 ```
+
+SSH-хост берётся из `DEPLOY_HOST` (переменная окружения или `.env`).
 
 ## Логи
 
