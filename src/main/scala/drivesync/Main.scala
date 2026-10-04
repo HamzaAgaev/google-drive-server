@@ -4,23 +4,25 @@ import zio.*
 import zio.http.Client
 
 import drivesync.config.AppConfig
-import drivesync.db.{CredentialsRepository, Database}
+import drivesync.db.{CredentialsRepository, Database, FileRepository}
 import drivesync.google.{AccessTokens, AuthCommand, DriveClient, GoogleOAuth}
+import drivesync.sync.{SyncPlan, VariantSelector}
 
 object Main extends ZIOAppDefault {
 
-  private val serve: ZIO[AppConfig & DriveClient, Throwable, Unit] =
+  private val serve: ZIO[AppConfig & DriveClient & FileRepository, Throwable, Unit] =
     for {
       config <- ZIO.service[AppConfig]
       drive <- ZIO.service[DriveClient]
-      _ <- ZIO.foreachDiscard(config.drive.folderIds) { folderId =>
-        drive.listFilesRecursively(folderId).flatMap { files =>
-          ZIO.logInfo(s"Folder $folderId: ${files.size} files") *>
-            ZIO.foreachDiscard(files) { file =>
-              ZIO.logInfo((file.folders :+ file.name).mkString("/"))
-            }
-        }
-      }
+      remote <- ZIO.foreach(config.drive.folderIds)(drive.listFilesRecursively)
+      selected = VariantSelector.select(
+        remote.flatten.distinctBy(_.id),
+        config.sync.variantPriority
+      )
+      local <- ZIO.serviceWithZIO[FileRepository](_.findAll)
+      plan = SyncPlan.make(selected, local)
+      _ <- ZIO.logInfo(s"Remote files: ${remote.flatten.size}, selected: ${selected.size}")
+      _ <- ZIO.foreachDiscard(plan)(action => ZIO.logInfo(action.toString))
     } yield ()
 
   override def run: ZIO[ZIOAppArgs, Any, Unit] =
@@ -30,6 +32,7 @@ object Main extends ZIOAppDefault {
           serve.provide(
             AppConfig.layer,
             Database.layer,
+            FileRepository.layer,
             CredentialsRepository.layer,
             GoogleOAuth.layer,
             AccessTokens.layer,

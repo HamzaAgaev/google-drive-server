@@ -14,7 +14,7 @@ final case class DriveConfig(
   authRedirectPort: Int
 )
 
-final case class SyncConfig(interval: Duration)
+final case class SyncConfig(interval: Duration, variantPriority: List[String])
 
 final case class StorageConfig(videosDir: Path, dbPath: Path)
 
@@ -32,7 +32,7 @@ object AppConfig {
   private given DeriveConfig[Path] = DeriveConfig[String].map(Path.of(_))
 
   private given DeriveConfig[List[String]] =
-    DeriveConfig[String].map(_.split(",").map(_.trim).filter(_.nonEmpty).toList)
+    DeriveConfig(Config.listOf(Config.string).map(_.flatMap(_.split(",").map(_.trim))))
 
   val descriptor: Config[AppConfig] = deriveConfig[AppConfig].mapKey(toKebabCase)
 

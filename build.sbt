@@ -25,7 +25,9 @@ lazy val root = (project in file("."))
       "dev.zio" %% "zio-json" % "1.1.0",
       "org.tpolecat" %% "doobie-core" % doobieVersion,
       "org.xerial" % "sqlite-jdbc" % "3.53.4.0",
-      "org.flywaydb" % "flyway-core" % "13.9.0"
+      "org.flywaydb" % "flyway-core" % "13.9.0",
+      "dev.zio" %% "zio-test" % zioVersion % Test,
+      "dev.zio" %% "zio-test-sbt" % zioVersion % Test
     ),
     run / fork := true
   )
