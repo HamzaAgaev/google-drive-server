@@ -29,14 +29,7 @@ object LocalPaths {
   }
 
   private def uniquePath(path: Path, taken: Set[Path]): Path =
-    (Iterator.single(path) ++ Iterator.from(2).map(withSuffix(path, _)))
+    (Iterator.single(path) ++ Iterator.from(2).map(n => FileNames.withSuffix(path, s" ($n)")))
       .find(candidate => !taken.contains(candidate))
       .get
-
-  private def withSuffix(path: Path, n: Int): Path = {
-    val name = path.getFileName.toString
-    val dot = name.lastIndexOf('.')
-    val (base, extension) = if (dot > 0) name.splitAt(dot) else (name, "")
-    path.resolveSibling(s"$base ($n)$extension")
-  }
 }

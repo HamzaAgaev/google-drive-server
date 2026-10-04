@@ -5,6 +5,7 @@ import java.time.Instant
 import zio.*
 import zio.http.*
 import zio.json.*
+import zio.stream.ZStream
 
 final case class RemoteFile(
   id: String,
@@ -87,6 +88,24 @@ final class DriveClient(client: Client, tokens: AccessTokens) {
         QueryParams("fields" -> DriveClient.itemFields, "supportsAllDrives" -> "true")
       )
     )
+
+  def download(fileId: String): ZStream[Any, Throwable, Byte] =
+    ZStream.unwrap(tokens.get.map { token =>
+      val request = Request
+        .get(
+          (filesUrl / fileId)
+            .addQueryParams(QueryParams("alt" -> "media", "supportsAllDrives" -> "true"))
+        )
+        .addHeader(Header.Authorization.Bearer(token))
+      client.stream(request) { response =>
+        if (response.status.isSuccess) response.body.asStream
+        else
+          ZStream.fromZIO(
+            response.body.asString
+              .flatMap(body => ZIO.fail(GoogleApiException(request, response.status, body)))
+          )
+      }
+    })
 
   private def request[A: JsonDecoder](url: URL): Task[A] =
     tokens.get.flatMap { token =>
