@@ -43,17 +43,19 @@ final class GoogleOAuth(config: AppConfig, client: Client) {
       "grant_type" -> "authorization_code"
     )
 
+  def refresh(refreshToken: String): Task[TokenResponse] =
+    requestToken(
+      "client_id" -> config.drive.clientId,
+      "client_secret" -> config.drive.clientSecret,
+      "refresh_token" -> refreshToken,
+      "grant_type" -> "refresh_token"
+    )
+
   private def requestToken(form: (String, String)*): Task[TokenResponse] =
-    for {
-      response <- client.batched(
-        Request.post(tokenUrl, Body.fromURLEncodedForm(Form.fromStrings(form*)))
-      )
-      body <- response.body.asString
-      _ <- ZIO
-        .fail(IllegalStateException(s"Google token request failed: ${response.status} $body"))
-        .unless(response.status.isSuccess)
-      tokens <- ZIO.fromEither(body.fromJson[TokenResponse]).mapError(IllegalStateException(_))
-    } yield tokens
+    GoogleApi.sendJson[TokenResponse](
+      client,
+      Request.post(tokenUrl, Body.fromURLEncodedForm(Form.fromStrings(form*)))
+    )
 }
 
 object GoogleOAuth {
