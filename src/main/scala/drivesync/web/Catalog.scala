@@ -2,6 +2,8 @@ package drivesync.web
 
 import java.nio.file.Path
 
+import scala.jdk.CollectionConverters.*
+
 import drivesync.db.DownloadedFile
 
 final case class Course(folder: Path, videos: List[DownloadedFile])
@@ -33,4 +35,9 @@ object Catalog {
       course.videos.lift(index + 1),
       course.videos.lift(index - 1)
     )
+
+  def courseTitle(folder: Path): String = folder.iterator.asScala.mkString(" / ")
+
+  def videoTitle(video: DownloadedFile): String =
+    video.path.getFileName.toString.replaceFirst("\\.[^.]+$", "").trim
 }

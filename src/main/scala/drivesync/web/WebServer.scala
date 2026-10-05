@@ -5,6 +5,7 @@ import java.nio.file.{Files, Path}
 
 import zio.*
 import zio.http.*
+import zio.json.*
 import zio.stream.ZStream
 
 import drivesync.config.AppConfig
@@ -25,6 +26,10 @@ object WebServer {
     Routes(
       Method.GET / Root -> handler(index),
       Method.GET / "watch" / string("id") -> handler((id: String, _: Request) => watch(id)),
+      Method.GET / "api" / "courses" -> handler(apiCourses),
+      Method.GET / "api" / "videos" / string("id") -> handler((id: String, _: Request) =>
+        apiVideo(id)
+      ),
       Method.GET / "files" / string("id") -> handler((id: String, request: Request) =>
         file(id, request)
       )
@@ -40,6 +45,18 @@ object WebServer {
   private def watch(id: String): ZIO[FileRepository, Throwable, Response] =
     ZIO.serviceWithZIO[FileRepository](_.findAll).map { files =>
       Catalog.watch(files, id).fold(Response.notFound)(watch => Response.html(Pages.watch(watch)))
+    }
+
+  private val apiCourses: ZIO[FileRepository, Throwable, Response] =
+    ZIO.serviceWithZIO[FileRepository](_.findAll).map { files =>
+      Response.json(Catalog.courses(files).map(ApiModels.course).toJson)
+    }
+
+  private def apiVideo(id: String): ZIO[FileRepository, Throwable, Response] =
+    ZIO.serviceWithZIO[FileRepository](_.findAll).map { files =>
+      Catalog
+        .watch(files, id)
+        .fold(Response.notFound)(watch => Response.json(ApiModels.watch(watch).toJson))
     }
 
   private def file(

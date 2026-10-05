@@ -1,10 +1,7 @@
 package drivesync.web
 
-import java.nio.file.Path
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-
-import scala.jdk.CollectionConverters.*
 
 import zio.http.template.*
 
@@ -35,10 +32,10 @@ object Pages {
       else
         div(courses.map { course =>
           section(
-            h2(courseTitle(course.folder)),
+            h2(Catalog.courseTitle(course.folder)),
             ul(course.videos.map { video =>
               li(
-                a(hrefAttr := watchUrl(video), videoTitle(video)),
+                a(hrefAttr := watchUrl(video), Catalog.videoTitle(video)),
                 span(classAttr := "muted", dateFormat.format(video.createdTime))
               )
             })
@@ -48,10 +45,10 @@ object Pages {
 
   def watch(watch: Watch): Html =
     page(
-      videoTitle(watch.video),
+      Catalog.videoTitle(watch.video),
       nav(a(hrefAttr := "/", "← Все курсы")),
-      h1(videoTitle(watch.video)),
-      p(classAttr := "muted", courseTitle(watch.course.folder)),
+      h1(Catalog.videoTitle(watch.video)),
+      p(classAttr := "muted", Catalog.courseTitle(watch.course.folder)),
       video(
         controlsAttr := "",
         preloadAttr := "metadata",
@@ -76,9 +73,4 @@ object Pages {
     )
 
   private def watchUrl(video: DownloadedFile): String = s"/watch/${video.driveId}"
-
-  private def courseTitle(folder: Path): String = folder.iterator.asScala.mkString(" / ")
-
-  private def videoTitle(video: DownloadedFile): String =
-    video.path.getFileName.toString.replaceFirst("\\.[^.]+$", "").trim
 }
