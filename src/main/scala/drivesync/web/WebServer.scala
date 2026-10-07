@@ -24,8 +24,6 @@ object WebServer {
 
   private val routes: Routes[AppConfig & FileRepository, Nothing] =
     Routes(
-      Method.GET / Root -> handler(index),
-      Method.GET / "watch" / string("id") -> handler((id: String, _: Request) => watch(id)),
       Method.GET / "api" / "courses" -> handler(apiCourses),
       Method.GET / "api" / "videos" / string("id") -> handler((id: String, _: Request) =>
         apiVideo(id)
@@ -36,16 +34,6 @@ object WebServer {
     ).handleErrorCauseZIO(cause =>
       ZIO.logErrorCause("Request failed", cause).as(Response.status(Status.InternalServerError))
     )
-
-  private val index: ZIO[FileRepository, Throwable, Response] =
-    ZIO.serviceWithZIO[FileRepository](_.findAll).map { files =>
-      Response.html(Pages.index(Catalog.courses(files)))
-    }
-
-  private def watch(id: String): ZIO[FileRepository, Throwable, Response] =
-    ZIO.serviceWithZIO[FileRepository](_.findAll).map { files =>
-      Catalog.watch(files, id).fold(Response.notFound)(watch => Response.html(Pages.watch(watch)))
-    }
 
   private val apiCourses: ZIO[FileRepository, Throwable, Response] =
     ZIO.serviceWithZIO[FileRepository](_.findAll).map { files =>

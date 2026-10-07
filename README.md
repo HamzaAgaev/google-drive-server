@@ -16,11 +16,19 @@
 
 ## Запуск
 
+Бэкенд (Scala, ZIO):
+
 ```bash
 cp .env.example .env   # ID папок Google Drive через запятую и OAuth-клиент (Desktop app)
 set -a; source .env; set +a
 sbt "run auth"         # один раз: вход в Google, refresh token сохраняется в БД
 sbt run
+```
+
+Фронтенд (React, TypeScript) — `http://localhost:5173`, запросы к `/api` и `/files` уходят в бэкенд:
+
+```bash
+cd frontend && npm install && npm run dev
 ```
 
 Остальные настройки — в `src/main/resources/application.conf`. Деплой на сервер — [deploy/README.md](deploy/README.md).
