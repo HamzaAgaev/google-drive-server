@@ -10,4 +10,4 @@ data/
 client_secret*
 app.jar
 node_modules/
-frontend/dist/
+frontend/dist*/

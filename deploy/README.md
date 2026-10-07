@@ -1,8 +1,9 @@
 # Деплой
 
 Ubuntu, nginx, systemd. Код клонируется в `/opt/google-drive-server` и собирается на сервере.
-Бэкенд слушает `127.0.0.1:8080`. nginx на порту 80 по адресу из `PUBLIC_HOST` отдаёт собранный
-фронтенд из `frontend/dist`, а `/api` и `/files` проксирует в бэкенд.
+Бэкенд слушает `127.0.0.1:8080`. nginx на портах 80 и 443 по адресу из `PUBLIC_HOST` отдаёт собранный
+фронтенд из `frontend/dist`, а `/api` и `/files` проксирует в бэкенд. Пути к TLS-сертификату — в
+`SSL_CERTIFICATE` и `SSL_CERTIFICATE_KEY`.
 
 ## Установка
 
@@ -44,7 +45,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now google-drive-server
 
 set -a; source .env; set +a
-envsubst '$PUBLIC_HOST' < deploy/nginx.conf | sudo tee /etc/nginx/sites-available/google-drive-server > /dev/null
+envsubst '$PUBLIC_HOST $SSL_CERTIFICATE $SSL_CERTIFICATE_KEY' < deploy/nginx.conf | sudo tee /etc/nginx/sites-available/google-drive-server > /dev/null
 sudo ln -s /etc/nginx/sites-available/google-drive-server /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 ```
