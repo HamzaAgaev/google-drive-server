@@ -6,7 +6,7 @@ import { useApi } from "../useApi";
 import { Button } from "../ui/Button";
 import { Message } from "../ui/Message";
 import { SegmentedControl } from "../ui/SegmentedControl";
-import { VideoPlayer } from "../ui/VideoPlayer";
+import { VideoPlayer } from "../ui/player/VideoPlayer";
 import styles from "./WatchPage.module.css";
 
 export function WatchPage() {
@@ -70,7 +70,13 @@ export function WatchPage() {
           <Button onClick={share}>Поделиться</Button>
         </div>
       </div>
-      <VideoPlayer key={lecture.id} ref={videoRef} src={fileUrl(lecture.id)} startTime={startTime} />
+      <VideoPlayer
+        key={lecture.id}
+        ref={videoRef}
+        videoId={lecture.id}
+        src={fileUrl(lecture.id)}
+        startTime={startTime}
+      />
       <nav className={styles.navigation}>
         {lecture.previous ? <Link to={`/watch/${lecture.previous.id}`}>← Предыдущая</Link> : <span />}
         {lecture.next ? <Link to={`/watch/${lecture.next.id}`}>Следующая →</Link> : <span />}
