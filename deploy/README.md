@@ -1,11 +1,23 @@
 # Деплой
 
 Ubuntu, nginx, systemd. Код клонируется в `/opt/google-drive-server` и собирается на сервере.
-Бэкенд слушает `127.0.0.1:8080`. nginx на портах 80 и 443 по адресу из `PUBLIC_HOST` отдаёт собранный
-фронтенд из `frontend/dist`, а `/api` и `/files` проксирует в бэкенд. Пути к TLS-сертификату — в
-`SSL_CERTIFICATE` и `SSL_CERTIFICATE_KEY`.
+Бэкенд слушает `127.0.0.1:8080`. nginx (сборка nginx.org с модулем `nginx-acme`) по домену из
+`PUBLIC_HOST` отдаёт собранный фронтенд из `frontend/dist`, а `/api` и `/files` проксирует в бэкенд.
+Сертификат Let's Encrypt nginx получает и продлевает сам, HTTP перенаправляется на HTTPS.
 
 ## Установка
+
+nginx из репозитория nginx.org с модулем ACME:
+
+```bash
+sudo apt install curl gnupg2 ca-certificates lsb-release ubuntu-keyring
+curl -fsSL https://nginx.org/keys/nginx_signing.key | gpg --dearmor | sudo tee /usr/share/keyrings/nginx-archive-keyring.gpg > /dev/null
+echo "deb [signed-by=/usr/share/keyrings/nginx-archive-keyring.gpg] https://nginx.org/packages/ubuntu $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list
+printf 'Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n' | sudo tee /etc/apt/preferences.d/99nginx
+sudo apt update && sudo apt install nginx nginx-module-acme
+sudo sed -i '1i load_module modules/ngx_http_acme_module.so;' /etc/nginx/nginx.conf
+sudo install -d -o nginx -m 700 /var/cache/nginx/acme-letsencrypt
+```
 
 JDK, sbt и Node.js:
 
@@ -45,12 +57,12 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now google-drive-server
 
 set -a; source .env; set +a
-envsubst '$PUBLIC_HOST $SSL_CERTIFICATE $SSL_CERTIFICATE_KEY' < deploy/nginx.conf | sudo tee /etc/nginx/sites-available/google-drive-server > /dev/null
-sudo ln -s /etc/nginx/sites-available/google-drive-server /etc/nginx/sites-enabled/
+envsubst '$PUBLIC_HOST' < deploy/nginx.conf | sudo tee /etc/nginx/conf.d/google-drive-server.conf > /dev/null
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-На роутере пробросить TCP-порт 80 на сервер; если включён ufw: `sudo ufw allow 80/tcp`.
+DNS: A-запись `PUBLIC_HOST` на IP сервера. На роутере пробросить TCP-порты 80 и 443 на сервер;
+если включён ufw: `sudo ufw allow 80/tcp && sudo ufw allow 443/tcp`.
 
 ## Обновление
 
