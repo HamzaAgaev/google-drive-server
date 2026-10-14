@@ -4,32 +4,54 @@ import java.time.Instant
 
 import zio.json.*
 
-import drivesync.db.DownloadedFile
+final case class VariantResponse(id: String, name: String) derives JsonEncoder
 
-final case class VideoResponse(id: String, title: String, createdTime: Instant) derives JsonEncoder
+final case class LectureResponse(
+  title: String,
+  createdTime: Instant,
+  variants: List[VariantResponse]
+) derives JsonEncoder
 
-final case class CourseResponse(title: String, videos: List[VideoResponse]) derives JsonEncoder
+final case class CourseResponse(title: String, lectures: List[LectureResponse]) derives JsonEncoder
+
+final case class LectureLinkResponse(id: String, title: String) derives JsonEncoder
 
 final case class WatchResponse(
-  video: VideoResponse,
+  id: String,
+  title: String,
+  variant: String,
   course: String,
-  previous: Option[VideoResponse],
-  next: Option[VideoResponse]
+  createdTime: Instant,
+  variants: List[VariantResponse],
+  previous: Option[LectureLinkResponse],
+  next: Option[LectureLinkResponse]
 ) derives JsonEncoder
 
 object ApiModels {
 
-  def video(file: DownloadedFile): VideoResponse =
-    VideoResponse(file.driveId, Catalog.videoTitle(file), file.createdTime)
-
   def course(course: Course): CourseResponse =
-    CourseResponse(Catalog.courseTitle(course.folder), course.videos.map(video))
+    CourseResponse(Catalog.courseTitle(course.folder), course.lectures.map(lecture))
 
   def watch(watch: Watch): WatchResponse =
     WatchResponse(
-      video(watch.video),
+      watch.variant.file.driveId,
+      watch.lecture.title,
+      watch.variant.name,
       Catalog.courseTitle(watch.course.folder),
-      watch.previous.map(video),
-      watch.next.map(video)
+      watch.lecture.createdTime,
+      watch.lecture.variants.map(variant),
+      watch.previous.map(link(watch.course)),
+      watch.next.map(link(watch.course))
     )
+
+  private def lecture(lecture: Lecture): LectureResponse =
+    LectureResponse(lecture.title, lecture.createdTime, lecture.variants.map(variant))
+
+  private def variant(variant: Variant): VariantResponse =
+    VariantResponse(variant.file.driveId, variant.name)
+
+  private def link(course: Course)(variant: Variant): LectureLinkResponse = {
+    val title = course.lectures.find(_.variants.contains(variant)).fold("")(_.title)
+    LectureLinkResponse(variant.file.driveId, title)
+  }
 }

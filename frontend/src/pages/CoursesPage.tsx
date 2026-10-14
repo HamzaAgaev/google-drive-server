@@ -15,11 +15,20 @@ export function CoursesPage() {
   return courses.data.map((course) => (
     <section key={course.title} className={styles.course}>
       <h2 className={styles.title}>{course.title}</h2>
-      <ul className={styles.videos}>
-        {course.videos.map((video) => (
-          <li key={video.id} className={styles.video}>
-            <Link to={`/watch/${video.id}`}>{video.title}</Link>
-            <span className={styles.date}>{formatDate(video.createdTime)}</span>
+      <ul className={styles.lectures}>
+        {course.lectures.map((lecture) => (
+          <li key={lecture.title} className={styles.lecture}>
+            <div>
+              <Link to={`/watch/${lecture.variants[0].id}`}>{lecture.title}</Link>
+              <div className={styles.variants}>
+                {lecture.variants.map((variant) => (
+                  <Link key={variant.id} className={styles.variant} to={`/watch/${variant.id}`}>
+                    {variant.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+            <span className={styles.date}>{formatDate(lecture.createdTime)}</span>
           </li>
         ))}
       </ul>

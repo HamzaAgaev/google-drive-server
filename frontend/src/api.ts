@@ -1,19 +1,33 @@
-export type Video = {
+export type Variant = {
   id: string;
+  name: string;
+};
+
+export type Lecture = {
   title: string;
   createdTime: string;
+  variants: Variant[];
 };
 
 export type Course = {
   title: string;
-  videos: Video[];
+  lectures: Lecture[];
+};
+
+export type LectureLink = {
+  id: string;
+  title: string;
 };
 
 export type Watch = {
-  video: Video;
+  id: string;
+  title: string;
+  variant: string;
   course: string;
-  previous?: Video;
-  next?: Video;
+  createdTime: string;
+  variants: Variant[];
+  previous?: LectureLink;
+  next?: LectureLink;
 };
 
 export class ApiError extends Error {

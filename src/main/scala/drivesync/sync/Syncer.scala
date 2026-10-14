@@ -22,10 +22,7 @@ final class Syncer(
   def runOnce: Task[Unit] =
     for {
       remote <- ZIO.foreach(config.drive.folderIds)(drive.listFilesRecursively)
-      selected = VariantSelector.select(
-        remote.flatten.distinctBy(_.id),
-        config.sync.variantPriority
-      )
+      selected = remote.flatten.distinctBy(_.id)
       local <- repository.findAll
       rejected <- repository.findRejected
       plan = SyncPlan.make(selected, local, rejected)

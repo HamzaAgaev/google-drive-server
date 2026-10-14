@@ -8,6 +8,10 @@
   color: var(--color-text-muted);
 }
 
+.variants {
+  margin-bottom: var(--space-3);
+}
+
 .navigation {
   display: flex;
   justify-content: space-between;

@@ -9,7 +9,7 @@ import zio.json.*
 import zio.stream.ZStream
 
 import drivesync.config.AppConfig
-import drivesync.db.FileRepository
+import drivesync.db.{DownloadedFile, FileRepository}
 
 object WebServer {
 
@@ -35,17 +35,25 @@ object WebServer {
       ZIO.logErrorCause("Request failed", cause).as(Response.status(Status.InternalServerError))
     )
 
-  private val apiCourses: ZIO[FileRepository, Throwable, Response] =
-    ZIO.serviceWithZIO[FileRepository](_.findAll).map { files =>
-      Response.json(Catalog.courses(files).map(ApiModels.course).toJson)
+  private val apiCourses: ZIO[AppConfig & FileRepository, Throwable, Response] =
+    withCatalog { (catalog, files) =>
+      Response.json(catalog.courses(files).map(ApiModels.course).toJson)
     }
 
-  private def apiVideo(id: String): ZIO[FileRepository, Throwable, Response] =
-    ZIO.serviceWithZIO[FileRepository](_.findAll).map { files =>
-      Catalog
+  private def apiVideo(id: String): ZIO[AppConfig & FileRepository, Throwable, Response] =
+    withCatalog { (catalog, files) =>
+      catalog
         .watch(files, id)
         .fold(Response.notFound)(watch => Response.json(ApiModels.watch(watch).toJson))
     }
+
+  private def withCatalog(
+    respond: (Catalog, List[DownloadedFile]) => Response
+  ): ZIO[AppConfig & FileRepository, Throwable, Response] =
+    for {
+      config <- ZIO.service[AppConfig]
+      files <- ZIO.serviceWithZIO[FileRepository](_.findAll)
+    } yield respond(Catalog(config.recordings.variants), files)
 
   private def file(
     id: String,

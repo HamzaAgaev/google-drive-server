@@ -14,11 +14,11 @@ final case class DriveConfig(
   authRedirectPort: Int
 )
 
-final case class SyncConfig(
-  interval: Duration,
-  variantPriority: List[String],
-  parallelDownloads: Int
-)
+final case class SyncConfig(interval: Duration, parallelDownloads: Int)
+
+final case class VariantConfig(marker: String, name: String)
+
+final case class RecordingsConfig(variants: List[VariantConfig])
 
 final case class StorageConfig(videosDir: Path, dbPath: Path)
 
@@ -27,6 +27,7 @@ final case class HttpConfig(host: String, port: Int)
 final case class AppConfig(
   drive: DriveConfig,
   sync: SyncConfig,
+  recordings: RecordingsConfig,
   storage: StorageConfig,
   http: HttpConfig
 )
