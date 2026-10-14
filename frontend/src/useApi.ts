@@ -1,9 +1,7 @@
 import { useEffect, useState, type DependencyList } from "react";
 
 export type ApiState<T> =
-  | { status: "loading" }
-  | { status: "error"; error: unknown }
-  | { status: "success"; data: T };
+  { status: "loading" } | { status: "error"; error: unknown } | { status: "success"; data: T };
 
 export function useApi<T>(
   load: (signal: AbortSignal) => Promise<T>,

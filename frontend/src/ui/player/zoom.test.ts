@@ -7,8 +7,14 @@ describe("zoomAt", () => {
   test("keeps the point under the cursor in place", () => {
     const point = { x: 200, y: 100 };
     const zoomed = zoomAt(noZoom, 2, point, size);
-    const contentBefore = { x: (point.x - noZoom.x) / noZoom.scale, y: (point.y - noZoom.y) / noZoom.scale };
-    const contentAfter = { x: (point.x - zoomed.x) / zoomed.scale, y: (point.y - zoomed.y) / zoomed.scale };
+    const contentBefore = {
+      x: (point.x - noZoom.x) / noZoom.scale,
+      y: (point.y - noZoom.y) / noZoom.scale,
+    };
+    const contentAfter = {
+      x: (point.x - zoomed.x) / zoomed.scale,
+      y: (point.y - zoomed.y) / zoomed.scale,
+    };
     expect(zoomed.scale).toBe(2);
     expect(contentAfter).toEqual(contentBefore);
   });
@@ -43,6 +49,10 @@ describe("panBy", () => {
 
 describe("clampZoom", () => {
   test("fits offsets into a smaller frame after resize", () => {
-    expect(clampZoom({ scale: 2, x: -1000, y: -1000 }, size)).toEqual({ scale: 2, x: -800, y: -450 });
+    expect(clampZoom({ scale: 2, x: -1000, y: -1000 }, size)).toEqual({
+      scale: 2,
+      x: -800,
+      y: -450,
+    });
   });
 });

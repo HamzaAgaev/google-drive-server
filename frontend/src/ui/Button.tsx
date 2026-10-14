@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router";
 import styles from "./Button.module.css";
 
-type Variant = "primary" | "secondary" | "ghost";
+type Variant = "primary" | "secondary" | "ghost" | "overlay";
 type Size = "sm" | "md";
 
 type CommonProps = {
@@ -32,7 +32,6 @@ export function Button(props: ButtonProps) {
       onClick={props.onClick}
       aria-label={props.label}
       aria-pressed={props.pressed}
-      title={props.label}
     >
       {props.icon}
       {props.children}
@@ -46,7 +45,7 @@ type ButtonLinkProps = CommonProps & {
 
 export function ButtonLink(props: ButtonLinkProps) {
   return (
-    <Link to={props.to} className={className(props)} aria-label={props.label} title={props.label}>
+    <Link to={props.to} className={className(props)} aria-label={props.label}>
       {props.icon}
       {props.children}
     </Link>

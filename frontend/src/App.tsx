@@ -15,7 +15,12 @@ export function App() {
         <Route path="/watch/:id" element={<WatchPage />} />
         <Route
           path="*"
-          element={<EmptyState title="Страница не найдена" action={<ButtonLink to="/">Все курсы</ButtonLink>} />}
+          element={
+            <EmptyState
+              title="Страница не найдена"
+              action={<ButtonLink to="/">Все курсы</ButtonLink>}
+            />
+          }
         />
       </Routes>
     </AppShell>

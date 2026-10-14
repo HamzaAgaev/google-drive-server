@@ -12,11 +12,23 @@ type Props = {
   value: string;
   onSelect: (value: string) => void;
   placement?: "top" | "bottom";
+  onOpenChange?: (open: boolean) => void;
 };
 
-export function Menu({ trigger, items, value, onSelect, placement = "bottom" }: Props) {
+export function Menu({
+  trigger,
+  items,
+  value,
+  onSelect,
+  placement = "bottom",
+  onOpenChange,
+}: Props) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    onOpenChange?.(open);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;

@@ -2,12 +2,16 @@ import { useEffect, useRef, useState, type PointerEvent, type RefObject } from "
 import { noZoom, panBy, zoomAt, type Point, type ZoomState } from "./zoom";
 
 const zoomStep = 1.25;
+const dragThreshold = 4;
 
-export function useZoom(surfaceRef: RefObject<HTMLDivElement | null>) {
+export function useZoom(
+  surfaceRef: RefObject<HTMLDivElement | null>,
+  onTap: (event: PointerEvent<HTMLDivElement>) => void,
+) {
   const [zoom, setZoom] = useState<ZoomState>(noZoom);
   const pointers = useRef(new Map<number, Point>());
   const pinchDistance = useRef<number>(undefined);
-  const dragged = useRef(false);
+  const gestureMoved = useRef(false);
 
   const surfaceRect = () => surfaceRef.current!.getBoundingClientRect();
   const relative = (point: Point, rect: DOMRect): Point => ({
@@ -36,8 +40,8 @@ export function useZoom(surfaceRef: RefObject<HTMLDivElement | null>) {
   };
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (pointers.current.size === 0) gestureMoved.current = false;
     pointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    dragged.current = false;
     if (event.pointerType !== "touch") event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -57,24 +61,25 @@ export function useZoom(surfaceRef: RefObject<HTMLDivElement | null>) {
         setZoom((state) => zoomAt(state, state.scale * factor, middle, rect));
       }
       pinchDistance.current = distance;
-      dragged.current = true;
+      gestureMoved.current = true;
     } else if (pointers.current.size === 1 && zoom.scale > 1) {
       const dx = current.x - previous.x;
       const dy = current.y - previous.y;
       setZoom((state) => panBy(state, dx, dy, rect));
-      if (Math.abs(dx) + Math.abs(dy) > 2) dragged.current = true;
+      if (Math.abs(dx) + Math.abs(dy) > dragThreshold) gestureMoved.current = true;
     }
   };
 
-  const onPointerEnd = (event: PointerEvent<HTMLDivElement>) => {
-    pointers.current.delete(event.pointerId);
+  const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    if (!pointers.current.delete(event.pointerId)) return;
     if (pointers.current.size < 2) pinchDistance.current = undefined;
+    if (pointers.current.size === 0 && !gestureMoved.current) onTap(event);
   };
 
-  const consumeDrag = () => {
-    const wasDragged = dragged.current;
-    dragged.current = false;
-    return wasDragged;
+  const onPointerCancel = (event: PointerEvent<HTMLDivElement>) => {
+    pointers.current.delete(event.pointerId);
+    pinchDistance.current = undefined;
+    gestureMoved.current = true;
   };
 
   return {
@@ -82,12 +87,6 @@ export function useZoom(surfaceRef: RefObject<HTMLDivElement | null>) {
     zoomIn: () => zoomBy(zoomStep),
     zoomOut: () => zoomBy(1 / zoomStep),
     resetZoom: () => setZoom(noZoom),
-    consumeDrag,
-    pointerHandlers: {
-      onPointerDown,
-      onPointerMove,
-      onPointerUp: onPointerEnd,
-      onPointerCancel: onPointerEnd,
-    },
+    pointerHandlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel },
   };
 }

@@ -3,7 +3,11 @@
   height: 4px;
   margin: 0;
   border-radius: var(--radius-full);
-  background: linear-gradient(to right, currentColor var(--fill), rgba(127, 127, 127, 0.35) var(--fill));
+  background: linear-gradient(
+    to right,
+    currentColor var(--fill),
+    rgba(127, 127, 127, 0.35) var(--fill)
+  );
   appearance: none;
   cursor: pointer;
 }

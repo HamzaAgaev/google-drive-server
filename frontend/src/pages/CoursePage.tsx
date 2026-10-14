@@ -16,7 +16,8 @@ import styles from "./CoursePage.module.css";
 export function CoursePage() {
   const { courseId = "" } = useParams();
   const courses = useApi(api.courses, []);
-  const course = courses.status === "success" ? courses.data.find((item) => item.id === courseId) : undefined;
+  const course =
+    courses.status === "success" ? courses.data.find((item) => item.id === courseId) : undefined;
 
   useEffect(() => {
     document.title = course ? `${course.title} · ${siteTitle}` : siteTitle;
@@ -24,7 +25,8 @@ export function CoursePage() {
 
   if (courses.status === "loading") return <Skeleton height={320} />;
   if (courses.status === "error") return <EmptyState title="Не удалось загрузить курс" />;
-  if (!course) return <EmptyState title="Курс не найден" action={<ButtonLink to="/">Все курсы</ButtonLink>} />;
+  if (!course)
+    return <EmptyState title="Курс не найден" action={<ButtonLink to="/">Все курсы</ButtonLink>} />;
 
   return (
     <div className={styles.layout}>
@@ -56,7 +58,12 @@ export function CoursePage() {
               </Link>
               <div className={styles.variants}>
                 {lecture.variants.map((variant) => (
-                  <ButtonLink key={variant.id} to={`/watch/${variant.id}`} size="sm" variant="ghost">
+                  <ButtonLink
+                    key={variant.id}
+                    to={`/watch/${variant.id}`}
+                    size="sm"
+                    variant="ghost"
+                  >
                     {variant.name}
                   </ButtonLink>
                 ))}

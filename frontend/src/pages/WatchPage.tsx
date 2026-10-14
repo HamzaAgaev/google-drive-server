@@ -67,7 +67,9 @@ export function WatchPage() {
     const url = new URL(watchPath(lecture.id, time), window.location.origin).toString();
     try {
       await navigator.clipboard.writeText(url);
-      setShareStatus(time > 0 ? `Ссылка с ${formatTimecode(time)} скопирована` : "Ссылка скопирована");
+      setShareStatus(
+        time > 0 ? `Ссылка с ${formatTimecode(time)} скопирована` : "Ссылка скопирована",
+      );
     } catch {
       window.prompt("Скопируйте ссылку", url);
     }
@@ -88,7 +90,10 @@ export function WatchPage() {
       <Cluster justify="between" gap={3}>
         {lecture.variants.length > 1 ? (
           <SegmentedControl
-            options={lecture.variants.map((variant) => ({ value: variant.id, label: variant.name }))}
+            options={lecture.variants.map((variant) => ({
+              value: variant.id,
+              label: variant.name,
+            }))}
             value={lecture.id}
             onChange={(variantId) => navigate(watchPath(variantId, currentTime()))}
           />
@@ -117,7 +122,11 @@ export function WatchPage() {
       />
       <Cluster justify="between">
         {lecture.previous ? (
-          <ButtonLink to={`/watch/${lecture.previous.id}`} variant="ghost" icon={<ChevronLeft size={16} />}>
+          <ButtonLink
+            to={`/watch/${lecture.previous.id}`}
+            variant="ghost"
+            icon={<ChevronLeft size={16} />}
+          >
             {lectureTitle(lecture.previous.title)}
           </ButtonLink>
         ) : (

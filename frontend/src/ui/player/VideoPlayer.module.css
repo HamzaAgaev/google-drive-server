@@ -1,20 +1,24 @@
 .player {
+  position: relative;
   overflow: hidden;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--color-video-background);
+  color: var(--color-on-overlay);
 }
 
 .player[data-fullscreen="true"] {
   display: flex;
-  flex-direction: column;
   border-radius: 0;
+}
+
+.player[data-controls="false"] {
+  cursor: none;
 }
 
 .surface {
   position: relative;
   overflow: hidden;
   touch-action: none;
-  cursor: pointer;
   user-select: none;
 }
 
@@ -28,7 +32,6 @@
 
 .player[data-fullscreen="true"] .surface {
   flex: 1;
-  min-height: 0;
 }
 
 .video {
@@ -42,4 +45,67 @@
 .player[data-fullscreen="true"] .video {
   height: 100%;
   max-height: none;
+}
+
+.center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.spinner {
+  animation: fade-in var(--duration-normal) var(--ease-out) 300ms both;
+}
+
+.flash {
+  display: grid;
+  place-items: center;
+  min-width: 72px;
+  height: 72px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-full);
+  background: var(--color-overlay);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  animation: flash 600ms var(--ease-out) forwards;
+}
+
+.controls {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transition:
+    opacity var(--duration-slow) var(--ease-out),
+    transform var(--duration-slow) var(--ease-out);
+}
+
+.player[data-controls="false"] .controls {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes flash {
+  from {
+    opacity: 1;
+    transform: scale(0.9);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.05);
+  }
 }

@@ -3,7 +3,9 @@ import { lectureTitle } from "./lectureTitle";
 
 describe("lectureTitle", () => {
   test("turns Zoom recording name into a readable date", () => {
-    expect(lectureTitle("2026-10-13 18_28 С++ hard, осень 2026")).toBe("вт, 13 октября 2026 г., 18:28");
+    expect(lectureTitle("2026-10-13 18_28 С++ hard, осень 2026")).toBe(
+      "вт, 13 октября 2026 г., 18:28",
+    );
   });
 
   test("keeps the copy number of duplicate recordings", () => {
