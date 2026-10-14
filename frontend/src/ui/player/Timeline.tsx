@@ -19,6 +19,9 @@ export function Timeline({ currentTime, duration, buffered, onSeek, onScrubbingC
   const [hoverTime, setHoverTime] = useState<number>();
   const [scrubbing, setScrubbing] = useState(false);
   const percent = (time: number) => (duration > 0 ? (time / duration) * 100 : 0);
+  const aheadBuffer = buffered.find(
+    (range) => range.start <= currentTime && currentTime <= range.end,
+  );
 
   const timeAt = (event: PointerEvent<HTMLDivElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -56,16 +59,15 @@ export function Timeline({ currentTime, duration, buffered, onSeek, onScrubbingC
       onPointerLeave={() => setHoverTime(undefined)}
     >
       <div className={styles.track}>
-        {buffered.map((range) => (
+        {aheadBuffer && (
           <div
-            key={range.start}
             className={styles.buffered}
             style={{
-              left: `${percent(range.start)}%`,
-              width: `${percent(range.end - range.start)}%`,
+              left: `${percent(aheadBuffer.start)}%`,
+              width: `${percent(aheadBuffer.end - aheadBuffer.start)}%`,
             }}
           />
-        ))}
+        )}
         <div className={styles.progress} style={{ width: `${percent(currentTime)}%` }} />
         <div className={styles.thumb} style={{ left: `${percent(currentTime)}%` }} />
       </div>
