@@ -12,7 +12,8 @@ final case class LectureResponse(
   variants: List[VariantResponse]
 ) derives JsonEncoder
 
-final case class CourseResponse(title: String, lectures: List[LectureResponse]) derives JsonEncoder
+final case class CourseResponse(id: String, title: String, lectures: List[LectureResponse])
+  derives JsonEncoder
 
 final case class LectureLinkResponse(id: String, title: String) derives JsonEncoder
 
@@ -20,6 +21,7 @@ final case class WatchResponse(
   id: String,
   title: String,
   variant: String,
+  courseId: String,
   course: String,
   createdTime: Instant,
   variants: List[VariantResponse],
@@ -30,13 +32,18 @@ final case class WatchResponse(
 object ApiModels {
 
   def course(course: Course): CourseResponse =
-    CourseResponse(Catalog.courseTitle(course.folder), course.lectures.map(lecture))
+    CourseResponse(
+      Catalog.courseId(course.folder),
+      Catalog.courseTitle(course.folder),
+      course.lectures.map(lecture)
+    )
 
   def watch(watch: Watch): WatchResponse =
     WatchResponse(
       watch.variant.file.driveId,
       watch.lecture.title,
       watch.variant.name,
+      Catalog.courseId(watch.course.folder),
       Catalog.courseTitle(watch.course.folder),
       watch.lecture.createdTime,
       watch.lecture.variants.map(variant),

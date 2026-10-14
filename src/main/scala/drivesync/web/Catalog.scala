@@ -1,7 +1,10 @@
 package drivesync.web
 
+import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.Path
+import java.security.MessageDigest
 import java.time.Instant
+import java.util.HexFormat
 
 import scala.jdk.CollectionConverters.*
 
@@ -86,5 +89,13 @@ final class Catalog(variants: List[VariantConfig]) {
 
 object Catalog {
 
-  def courseTitle(folder: Path): String = folder.iterator.asScala.mkString(" / ")
+  def courseId(folder: Path): String =
+    HexFormat.of
+      .formatHex(MessageDigest.getInstance("SHA-1").digest(folder.toString.getBytes(UTF_8)))
+      .take(12)
+
+  def courseTitle(folder: Path): String = {
+    val segments = folder.iterator.asScala.map(_.toString).toList
+    (if (segments.size > 1) segments.tail else segments).mkString(" / ")
+  }
 }

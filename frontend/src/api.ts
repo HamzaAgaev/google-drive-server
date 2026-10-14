@@ -10,6 +10,7 @@ export type Lecture = {
 };
 
 export type Course = {
+  id: string;
   title: string;
   lectures: Lecture[];
 };
@@ -23,6 +24,7 @@ export type Watch = {
   id: string;
   title: string;
   variant: string;
+  courseId: string;
   course: string;
   createdTime: string;
   variants: Variant[];

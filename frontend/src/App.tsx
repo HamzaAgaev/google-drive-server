@@ -1,17 +1,23 @@
 import { Route, Routes } from "react-router";
-import { CoursesPage } from "./pages/CoursesPage";
+import { CoursePage } from "./pages/CoursePage";
+import { HomePage } from "./pages/HomePage";
 import { WatchPage } from "./pages/WatchPage";
-import { Layout } from "./ui/Layout";
-import { Message } from "./ui/Message";
+import { AppShell } from "./ui/AppShell";
+import { ButtonLink } from "./ui/Button";
+import { EmptyState } from "./ui/EmptyState";
 
 export function App() {
   return (
-    <Layout>
+    <AppShell>
       <Routes>
-        <Route path="/" element={<CoursesPage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/courses/:courseId" element={<CoursePage />} />
         <Route path="/watch/:id" element={<WatchPage />} />
-        <Route path="*" element={<Message>Страница не найдена</Message>} />
+        <Route
+          path="*"
+          element={<EmptyState title="Страница не найдена" action={<ButtonLink to="/">Все курсы</ButtonLink>} />}
+        />
       </Routes>
-    </Layout>
+    </AppShell>
   );
 }

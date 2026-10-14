@@ -64,6 +64,16 @@ object CatalogSpec extends ZIOSpecDefault {
         watch.flatMap(_.next).map(_.file.driveId).contains("unix-3-screen")
       )
     },
+    test("course title skips the root folder and id is stable") {
+      assertTrue(
+        Catalog.courseTitle(Path.of("root/C++ hard")) == "C++ hard",
+        Catalog.courseTitle(Path.of("root/Year 1/Unix")) == "Year 1 / Unix",
+        Catalog.courseTitle(Path.of("root")) == "root",
+        Catalog.courseId(Path.of("root/Unix")) == Catalog.courseId(Path.of("root/Unix")),
+        Catalog.courseId(Path.of("root/Unix")) != Catalog.courseId(Path.of("root/C++")),
+        Catalog.courseId(Path.of("root/Unix")).length == 12
+      )
+    },
     test("no neighbours across courses and unknown videos") {
       assertTrue(
         catalog.watch(files, "cpp-1").exists(w => w.previous.isEmpty && w.next.isEmpty),

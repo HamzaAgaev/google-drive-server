@@ -1,0 +1,43 @@
+.anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.anchor::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  z-index: 10;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-overlay);
+  color: var(--color-on-overlay);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.top::after {
+  bottom: calc(100% + 6px);
+}
+
+.bottom::after {
+  top: calc(100% + 6px);
+}
+
+.anchor:hover::after,
+.anchor:focus-within::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (hover: none) {
+  .anchor::after {
+    display: none;
+  }
+}

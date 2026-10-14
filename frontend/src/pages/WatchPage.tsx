@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
+import { ChevronLeft, ChevronRight, Link2 } from "lucide-react";
 import { api, ApiError, fileUrl } from "../api";
+import { lectureTitle } from "../lectureTitle";
 import { formatTimecode, parseTimecode, timecodeParam } from "../timecode";
 import { useApi } from "../useApi";
-import { Button } from "../ui/Button";
-import { Message } from "../ui/Message";
+import { siteTitle } from "../ui/AppShell";
+import { Breadcrumbs } from "../ui/Breadcrumbs";
+import { Button, ButtonLink } from "../ui/Button";
+import { EmptyState } from "../ui/EmptyState";
 import { SegmentedControl } from "../ui/SegmentedControl";
+import { Skeleton } from "../ui/Skeleton";
+import { Cluster, Stack } from "../ui/Stack";
+import { Text } from "../ui/Text";
 import { VideoPlayer } from "../ui/player/VideoPlayer";
-import styles from "./WatchPage.module.css";
 
 export function WatchPage() {
   const { id = "" } = useParams();
@@ -16,12 +22,15 @@ export function WatchPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [shareStatus, setShareStatus] = useState<string>();
   const watch = useApi((signal) => api.video(id, signal), [id]);
-  const title = watch.status === "success" ? watch.data.title : "Лекции";
   const startTime = parseTimecode(searchParams.get("t"));
 
   useEffect(() => {
-    document.title = title;
-  }, [title]);
+    if (watch.status === "success") {
+      document.title = `${lectureTitle(watch.data.title)} · ${watch.data.course}`;
+    } else {
+      document.title = siteTitle;
+    }
+  }, [watch]);
 
   useEffect(() => {
     if (!shareStatus) return;
@@ -29,10 +38,23 @@ export function WatchPage() {
     return () => clearTimeout(timeout);
   }, [shareStatus]);
 
-  if (watch.status === "loading") return <Message>Загрузка…</Message>;
+  if (watch.status === "loading") {
+    return (
+      <Stack gap={4}>
+        <Skeleton height={20} width={240} />
+        <Skeleton height={36} width="60%" />
+        <Skeleton height={420} />
+      </Stack>
+    );
+  }
   if (watch.status === "error") {
     const notFound = watch.error instanceof ApiError && watch.error.status === 404;
-    return <Message>{notFound ? "Видео не найдено" : "Не удалось загрузить видео"}</Message>;
+    return (
+      <EmptyState
+        title={notFound ? "Видео не найдено" : "Не удалось загрузить видео"}
+        action={<ButtonLink to="/">Все курсы</ButtonLink>}
+      />
+    );
   }
 
   const lecture = watch.data;
@@ -45,17 +67,25 @@ export function WatchPage() {
     const url = new URL(watchPath(lecture.id, time), window.location.origin).toString();
     try {
       await navigator.clipboard.writeText(url);
-      setShareStatus(time > 0 ? `Ссылка скопирована (${formatTimecode(time)})` : "Ссылка скопирована");
+      setShareStatus(time > 0 ? `Ссылка с ${formatTimecode(time)} скопирована` : "Ссылка скопирована");
     } catch {
       window.prompt("Скопируйте ссылку", url);
     }
   };
 
   return (
-    <>
-      <h1 className={styles.title}>{lecture.title}</h1>
-      <p className={styles.course}>{lecture.course}</p>
-      <div className={styles.toolbar}>
+    <Stack gap={5}>
+      <Stack gap={3}>
+        <Breadcrumbs
+          items={[
+            { label: "Курсы", to: "/" },
+            { label: lecture.course, to: `/courses/${lecture.courseId}` },
+            { label: lectureTitle(lecture.title) },
+          ]}
+        />
+        <h1>{lectureTitle(lecture.title)}</h1>
+      </Stack>
+      <Cluster justify="between" gap={3}>
         {lecture.variants.length > 1 ? (
           <SegmentedControl
             options={lecture.variants.map((variant) => ({ value: variant.id, label: variant.name }))}
@@ -63,13 +93,21 @@ export function WatchPage() {
             onChange={(variantId) => navigate(watchPath(variantId, currentTime()))}
           />
         ) : (
-          <span />
+          <Text tone="muted" size="sm">
+            {lecture.variant}
+          </Text>
         )}
-        <div className={styles.share}>
-          {shareStatus && <span className={styles.shareStatus}>{shareStatus}</span>}
-          <Button onClick={share}>Поделиться</Button>
-        </div>
-      </div>
+        <Cluster gap={3}>
+          {shareStatus && (
+            <Text tone="muted" size="sm">
+              {shareStatus}
+            </Text>
+          )}
+          <Button icon={<Link2 size={16} />} onClick={share}>
+            Поделиться
+          </Button>
+        </Cluster>
+      </Cluster>
       <VideoPlayer
         key={lecture.id}
         ref={videoRef}
@@ -77,10 +115,21 @@ export function WatchPage() {
         src={fileUrl(lecture.id)}
         startTime={startTime}
       />
-      <nav className={styles.navigation}>
-        {lecture.previous ? <Link to={`/watch/${lecture.previous.id}`}>← Предыдущая</Link> : <span />}
-        {lecture.next ? <Link to={`/watch/${lecture.next.id}`}>Следующая →</Link> : <span />}
-      </nav>
-    </>
+      <Cluster justify="between">
+        {lecture.previous ? (
+          <ButtonLink to={`/watch/${lecture.previous.id}`} variant="ghost" icon={<ChevronLeft size={16} />}>
+            {lectureTitle(lecture.previous.title)}
+          </ButtonLink>
+        ) : (
+          <span />
+        )}
+        {lecture.next && (
+          <ButtonLink to={`/watch/${lecture.next.id}`} variant="ghost">
+            {lectureTitle(lecture.next.title)}
+            <ChevronRight size={16} />
+          </ButtonLink>
+        )}
+      </Cluster>
+    </Stack>
   );
 }
